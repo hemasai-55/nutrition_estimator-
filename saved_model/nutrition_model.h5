@@ -1,1 +1,59 @@
+# model_train.py
+
+import tensorflow as tf
+from tensorflow.keras import layers, models
+import numpy as np
+from sklearn.model_selection import train_test_split
+import os
+
+# ---------------------------------------
+# Step 1: Create Dummy Data (Replace with Real Dataset Later)
+# ---------------------------------------
+num_samples = 1000  # number of images
+X = np.random.rand(num_samples, 64, 64, 3)  # random images
+y = np.random.rand(num_samples, 4) * [700, 50, 30, 100]  # random nutrition values: [cal, protein, fat, carbs]
+
+# Split into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# ---------------------------------------
+# Step 2: Build the CNN Model
+# ---------------------------------------
+model = models.Sequential([
+    layers.Conv2D(32, (3,3), activation='relu', input_shape=(64,64,3)),
+    layers.MaxPooling2D(2,2),
+    layers.Conv2D(64, (3,3), activation='relu'),
+    layers.MaxPooling2D(2,2),
+    layers.Flatten(),
+    layers.Dense(128, activation='relu'),
+    layers.Dropout(0.3),
+    layers.Dense(4, activation='linear')  # 4 outputs: calories, protein, fat, carbs
+])
+
+# Compile the model
+model.compile(optimizer='adam', loss='mse', metrics=['mae'])
+
+# Show model summary
+model.summary()
+
+# ---------------------------------------
+# Step 3: Train the Model
+# ---------------------------------------
+print("\n🚀 Training the Nutrition Estimator model...\n")
+history = model.fit(X_train, y_train, epochs=10, batch_size=32, validation_split=0.2, verbose=1)
+
+# Evaluate the model
+loss, mae = model.evaluate(X_test, y_test)
+print(f"\n✅ Model training complete! Test MAE: {mae:.2f}\n")
+
+# ---------------------------------------
+# Step 4: Create Folder and Save the Model
+# ---------------------------------------
+save_dir = "saved_model"
+os.makedirs(save_dir, exist_ok=True)  # create folder if not exists
+
+model_path = os.path.join(save_dir, "nutrition_model.h5")
+model.save(model_path)
+
+print(f"💾 Model saved successfully at: {model_path}")
 
